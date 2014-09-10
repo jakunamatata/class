@@ -1,0 +1,28 @@
+{
+  "name": "eden-class",
+  "description": "Eden JS Base Class",
+  "version": "0.0.1",
+  "author": {
+    "name": "Christian Blanquera",
+    "email": "cblanquera@openovate.com"
+  },
+  "keywords": [
+    "eden",
+    "library"
+  ],
+  "devDependencies": {
+    "mocha": "1.21.4"
+  },
+  "dependencies": {
+	"argument": "0.0.2",
+	"classified-magic": "0.0.10"
+  },
+  "main": "./class.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/edenjs/class.git"
+  },
+  "scripts": {
+    "test": "mocha"
+  }
+}
