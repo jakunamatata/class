@@ -13,6 +13,12 @@ module.exports = require('classified-magic')(function(prototype) {
 	
 	/* Private Properties
 	-------------------------------*/
+	prototype.__sequence = {
+		stack	: [],
+		working	: false,
+		args	: [],
+		loop	: [] };
+	
 	var __states = {};
 	
 	/* Magic
@@ -147,6 +153,28 @@ module.exports = require('classified-magic')(function(prototype) {
 		return this;
 	};
 	
+	prototype.sync = function(callback, unshift) {
+		//argument 1 must be a function
+		argument.test(1, 'function');
+		
+		var sequence = this.__sequence;
+		
+		
+		if(!unshift) {
+			sequence.stack.push(callback);
+		} else {
+			sequence.stack.unshift(callback);
+		}
+		
+		if(!sequence.working) {
+			sequence.working = true;
+			sequence.scope = this;
+			this.__next.apply(sequence, sequence.args);
+		}
+		
+		return this;
+	};
+	
 	/**
      * Notify all observers of that a specific
      * event has happened
@@ -187,6 +215,73 @@ module.exports = require('classified-magic')(function(prototype) {
 	-------------------------------*/
 	/* Private Methods
 	-------------------------------*/
+	prototype.__next = function() {
+		var args = Array.prototype.slice.apply(arguments);
+		
+		//if there is something in the loop
+		if(this.loop.length) {
+			//save the last called args
+			if(!this.last) {
+				this.last = args;
+			}
+			
+			var item = this.loop.shift();
+			//push in next()
+			//this function will recurse call
+			//so no need to parse the loop
+			item.args.push(arguments.callee.bind(this));
+			
+			//async call
+			process.nextTick(function() {
+				//do the callback
+				item.callback.apply(this.scope, item.args);
+			}.bind(this));
+			
+			return;
+		} 
+		
+		if(this.last) {
+			args = this.last;
+			delete this.last;
+		}
+		
+		if(!this.stack.length) {
+			this.working 	= false;
+			this.args 		= args;
+			return;
+		}
+		
+		var callback 	= this.stack.shift(),
+			next 		= arguments.callee.bind(this);
+		
+		next.loop = __loop.bind(this);
+		
+		args.push(next);
+		
+		//async call
+		process.nextTick(function() {
+			//do the callback
+			callback.apply(this.scope, args);
+		}.bind(this));
+	};
+	
+	var __loop = function() {
+		if(!this.stack.length) {
+			return;
+		}
+		
+		var item = {args: Array.prototype.slice.apply(arguments) };
+		
+		//if loop is empty
+		if(!this.loop.length) {
+			item.callback = this.stack.shift();
+		} else {
+			item.callback = this.loop[0].callback;
+		}
+		
+		this.loop.push(item);
+	};
+	
 	var _isNative = function(value) {
 		//do the easy ones first
 		if(value === Date

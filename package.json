@@ -1,7 +1,7 @@
 {
   "name": "eden-class",
   "description": "Eden JS Base Class",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "author": {
     "name": "Christian Blanquera",
     "email": "cblanquera@openovate.com"
@@ -15,7 +15,7 @@
   },
   "dependencies": {
 	"argument": "0.0.2",
-	"classified-magic": "0.0.10"
+	"classified-magic": "0.0.13"
   },
   "main": "./class.js",
   "repository": {
