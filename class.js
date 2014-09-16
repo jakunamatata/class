@@ -1,7 +1,8 @@
 module.exports = require('classified-magic')(function(prototype) {
 	/* Require
 	-------------------------------*/
-	var argument = require('argument');
+	var argument 	= require('argument');
+	var sync 		= require('syncopate');
 	
 	/* Constants
 	-------------------------------*/
@@ -13,12 +14,6 @@ module.exports = require('classified-magic')(function(prototype) {
 	
 	/* Private Properties
 	-------------------------------*/
-	prototype.__sequence = {
-		stack	: [],
-		working	: false,
-		args	: [],
-		loop	: [] };
-	
 	var __states = {};
 	
 	/* Magic
@@ -34,26 +29,7 @@ module.exports = require('classified-magic')(function(prototype) {
 	 * @return object
 	 */
 	prototype.capture = function(deep) {
-		var j, key, 
-			destination	= {},
-			keys 		= Object.keys(this), 
-			i 			= keys.length;
-		
-		while (i--) {
-			key = keys[i];
-			destination[key] = this[key];
-			
-			if(deep
-			&& typeof this[key] === 'object'
-			&& this[key] !== null
-			&& !_isNative(this[key])) {
-				destination[key] = this.capture(this[key], {}, deep);
-			} else if(deep && this[key] instanceof Array) {
-				destination[key] = this.capture(this[key], [], deep);
-			}
-		}
-		
-		return destination;
+		return _copy(this, {}, deep);
 	};
 	
 	/**
@@ -153,26 +129,17 @@ module.exports = require('classified-magic')(function(prototype) {
 		return this;
 	};
 	
-	prototype.sync = function(callback, unshift) {
+	/**
+     * Starts a synchronous thread
+     *
+     * @param *function
+     * @return [Syncopate]
+     */
+	prototype.sync = function(callback) {
 		//argument 1 must be a function
 		argument.test(1, 'function');
 		
-		var sequence = this.__sequence;
-		
-		
-		if(!unshift) {
-			sequence.stack.push(callback);
-		} else {
-			sequence.stack.unshift(callback);
-		}
-		
-		if(!sequence.working) {
-			sequence.working = true;
-			sequence.scope = this;
-			this.__next.apply(sequence, sequence.args);
-		}
-		
-		return this;
+		return sync().scope(this).then(callback);
 	};
 	
 	/**
@@ -215,71 +182,24 @@ module.exports = require('classified-magic')(function(prototype) {
 	-------------------------------*/
 	/* Private Methods
 	-------------------------------*/
-	prototype.__next = function() {
-		var args = Array.prototype.slice.apply(arguments);
+	var _copy = function(source, destination, deep) {
+		var j, key, keys = Object.keys(source), i = keys.length;
 		
-		//if there is something in the loop
-		if(this.loop.length) {
-			//save the last called args
-			if(!this.last) {
-				this.last = args;
+		while (i--) {
+			key = keys[i];
+			destination[key] = source[key];
+			
+			if(deep
+			&& typeof source[key] === 'object'
+			&& source[key] !== null
+			&& !_isNative(source[key])) {
+				destination[key] = _copy(source[key], {}, deep);
+			} else if(deep && source[key] instanceof Array) {
+				destination[key] = _copy(source[key], [], deep);
 			}
-			
-			var item = this.loop.shift();
-			//push in next()
-			//this function will recurse call
-			//so no need to parse the loop
-			item.args.push(arguments.callee.bind(this));
-			
-			//async call
-			process.nextTick(function() {
-				//do the callback
-				item.callback.apply(this.scope, item.args);
-			}.bind(this));
-			
-			return;
-		} 
-		
-		if(this.last) {
-			args = this.last;
-			delete this.last;
 		}
 		
-		if(!this.stack.length) {
-			this.working 	= false;
-			this.args 		= args;
-			return;
-		}
-		
-		var callback 	= this.stack.shift(),
-			next 		= arguments.callee.bind(this);
-		
-		next.loop = __loop.bind(this);
-		
-		args.push(next);
-		
-		//async call
-		process.nextTick(function() {
-			//do the callback
-			callback.apply(this.scope, args);
-		}.bind(this));
-	};
-	
-	var __loop = function() {
-		if(!this.stack.length) {
-			return;
-		}
-		
-		var item = {args: Array.prototype.slice.apply(arguments) };
-		
-		//if loop is empty
-		if(!this.loop.length) {
-			item.callback = this.stack.shift();
-		} else {
-			item.callback = this.loop[0].callback;
-		}
-		
-		this.loop.push(item);
+		return destination;
 	};
 	
 	var _isNative = function(value) {
