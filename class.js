@@ -21,6 +21,15 @@ module.exports = require('classified-magic')(function(prototype) {
 	/* Public Methods
 	-------------------------------*/
 	/**
+	 * Argument Testing
+	 *
+	 * @return [Argument]
+	 */
+	prototype.argument = function() {
+		return argument;
+	};
+	
+	/**
 	 * For Async we lose the protected 
 	 * and private access. This grabs it 
 	 * before it is removed from the scope
@@ -40,7 +49,7 @@ module.exports = require('classified-magic')(function(prototype) {
      * @return this
      */
 	prototype.inspect = function(variable, next) {
-		argument.test(2, 'string', 'undef');
+		this.argument().test(2, 'string', 'undef');
 		var inspector = require('./inspect').load();
 		
 		//if variable is true
@@ -58,7 +67,7 @@ module.exports = require('classified-magic')(function(prototype) {
      */
 	prototype.loadState = function(name) {
 		//argument 1 must be a string
-		argument.test(1, 'string');
+		this.argument().test(1, 'string');
 		
 		if(typeof __states[name] !== 'undefined') {
 			return __states[name];
@@ -76,7 +85,7 @@ module.exports = require('classified-magic')(function(prototype) {
      */
 	prototype.loop = function(callback, i) {
 		//argument 1 must be a function
-		argument.test(1, 'function');
+		this.argument().test(1, 'function');
 		
 		i = i || 0;
 		
@@ -97,7 +106,7 @@ module.exports = require('classified-magic')(function(prototype) {
      * @return this
      */
 	prototype.on = function(event, callback) {
-		argument
+		this.argument()
 			//argument 1 must be a string
 			.test(1, 'string')
 			//argument 2 must be a function
@@ -117,7 +126,7 @@ module.exports = require('classified-magic')(function(prototype) {
      */
 	prototype.saveState = function(name, value) {
 		//argument 1 must be a string
-		argument.test(1, 'string');
+		this.argument().test(1, 'string');
 		
 		if(typeof value === 'undefined') {
 			value = this;
@@ -137,7 +146,7 @@ module.exports = require('classified-magic')(function(prototype) {
      */
 	prototype.sync = function(callback) {
 		//argument 1 must be a function
-		argument.test(1, 'function');
+		this.argument().test(1, 'function');
 		
 		return sync().scope(this).then(callback);
 	};
@@ -152,7 +161,7 @@ module.exports = require('classified-magic')(function(prototype) {
      */
 	prototype.trigger = function(event) {
 		//argument 1 must be a string
-		argument.test(1, 'string');
+		this.argument().test(1, 'string');
 		
 		this._events.emit.apply(this._events, arguments);
 		
@@ -168,7 +177,7 @@ module.exports = require('classified-magic')(function(prototype) {
      */
 	prototype.when = function(condition, callback) {
 		//argument 2 must be a function
-		argument.test(1, 'function');
+		this.argument().test(1, 'function');
 		
 		if((typeof condition === 'function' && condition(this))
 		|| typeof condition !== 'function' && condition) {

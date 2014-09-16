@@ -1,8 +1,6 @@
 module.exports = require('./class').extend(function(prototype) {
 	/* Require
 	-------------------------------*/
-	var argument = require('argument');
-	
 	/* Constants
 	-------------------------------*/
 	/* Public Properties
@@ -61,7 +59,7 @@ module.exports = require('./class').extend(function(prototype) {
      * @return this
      */
     prototype.next = function(scope, name) {
-        argument
+        this.argument()
 			//argument 1 must be an object
             .test(1, 'object') 
 			//argument 2 must be a string or null
